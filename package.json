@@ -1,0 +1,36 @@
+{
+  "name": "lumina-hdr",
+  "version": "1.0.0",
+  "description": "Cross-platform high-precision HDR photo viewer with WebGPU extended dynamic range display and LuminaSaver design sync",
+  "main": "src/server/app.js",
+  "type": "module",
+  "bin": {
+    "lumina-hdr": "./src/server/app.js"
+  },
+  "scripts": {
+    "start": "node src/server/app.js",
+    "dev": "node --watch src/server/app.js",
+    "sync:lumina": "node scripts/sync-lumina.js",
+    "test": "node --test tests/*.test.js"
+  },
+  "keywords": [
+    "hdr",
+    "webgpu",
+    "photo-viewer",
+    "display-p3",
+    "rec2020",
+    "jpeg-xl",
+    "ultra-hdr",
+    "gain-map",
+    "iso-21496-1",
+    "avif",
+    "openexr",
+    "docker"
+  ],
+  "author": "Ben Hayashi",
+  "license": "GPL-3.0",
+  "dependencies": {
+    "exifreader": "^4.50.0",
+    "ws": "^8.22.0"
+  }
+}

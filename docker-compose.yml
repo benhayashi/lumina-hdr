@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  lumina-hdr:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lumina-hdr
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - HOST=0.0.0.0
+      - PHOTOS_DIR=/photos
+    volumes:
+      # Mount your host photo directory (set in .env or defaults to ./sample-photos)
+      - ${PHOTOS_DIR:-./sample-photos}:/photos:ro
+      # Persist SQLite index and cache across restarts
+      - ./data:/app/data

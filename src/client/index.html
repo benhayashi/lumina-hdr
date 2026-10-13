@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>LuminaHDR 🌟 High Dynamic Range Photo Viewer</title>
+  <link rel="stylesheet" href="/css/lumina-theme.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="dark-theme">
+  <!-- Main Display Viewport -->
+  <div id="viewport" class="viewport">
+    <!-- Engine 1: Native Hardware HDR Presentation (AVIF 10b, Ultra HDR JPEG, JXL) -->
+    <div id="native-container" class="media-container active">
+      <img id="native-img" class="media-element" alt="LuminaHDR Content" dynamic-range="high">
+    </div>
+
+    <!-- Engine 2: WebGPU 16-bit Float Extended Canvas (EXR, Radiance HDR, Float TIFF, Custom Shaders) -->
+    <div id="webgpu-container" class="media-container">
+      <canvas id="webgpu-canvas" class="media-element"></canvas>
+    </div>
+
+    <!-- Split SDR vs HDR Wipe Divider -->
+    <div id="split-divider" class="split-divider" style="display: none;">
+      <div class="split-handle"></div>
+      <div class="split-label left">SDR (Clipped)</div>
+      <div class="split-label right">HDR (True Peak)</div>
+    </div>
+  </div>
+
+  <!-- LuminaSaver Glassmorphic HUD Overlay -->
+  <div id="ui-overlay" class="ui-overlay overlay-mode-full">
+    <!-- Top Row: Left Card (Path/File) and Right Card (Counter & HDR Status) -->
+    <div class="hud-top-bar">
+      <!-- Top-Left Card: Folder & Filename with Format Badge -->
+      <div class="glass-card hud-top-left" id="card-top-left">
+        <div class="folder-row">
+          <span class="icon">📁</span>
+          <span id="lbl-folder" class="lbl-folder">/</span>
+        </div>
+        <div class="filename-row">
+          <span id="lbl-filename" class="lbl-filename">Loading photos...</span>
+          <span id="badge-hdr-type" class="badge-hdr">SDR</span>
+        </div>
+      </div>
+
+      <!-- Top-Right Card: Counter & Live Display Headroom -->
+      <div class="glass-card hud-top-right" id="card-top-right">
+        <div class="counter-row">
+          <span id="lbl-counter" class="lbl-counter">0 / 0</span>
+        </div>
+        <div class="hdr-status-row">
+          <span id="lbl-hdr-status" class="lbl-hdr-status">Detecting Display...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Center Alerts: Toast Message, Paused Status, Zoom Indicator -->
+    <div class="hud-center-area">
+      <div class="glass-card hud-center-card" id="card-paused" style="display: none;">
+        <span class="lbl-paused">⏸ PAUSED</span>
+      </div>
+      <div class="glass-card hud-center-card" id="card-toast" style="display: none;">
+        <span id="lbl-toast" class="lbl-toast"></span>
+      </div>
+    </div>
+
+    <!-- Bottom Row: Tri-Tier Metadata Card & Progress Bar -->
+    <div class="hud-bottom-bar">
+      <!-- Quick Action Floating Toolbar -->
+      <div class="glass-card quick-toolbar" id="quick-toolbar">
+        <button class="tool-btn" id="btn-prev" title="Previous Photo (Left Arrow / P)">◀</button>
+        <button class="tool-btn" id="btn-play" title="Play / Pause Slideshow (Space)">▶</button>
+        <button class="tool-btn" id="btn-next" title="Next Photo (Right Arrow / N)">▶</button>
+        <span class="tool-divider"></span>
+        <button class="tool-btn" id="btn-grid" title="Thumbnail Grid (G)">⊞ Grid</button>
+        <button class="tool-btn" id="btn-split" title="Toggle SDR/HDR Split Comparison (S)">🔀 Split</button>
+        <button class="tool-btn" id="btn-heatmap" title="Toggle HDR Luminance Heatmap (H)">🔥 Heatmap</button>
+        <button class="tool-btn" id="btn-ev-down" title="Decrease Exposure ( [ )">☀️ -0.5</button>
+        <button class="tool-btn" id="btn-ev-up" title="Increase Exposure ( ] )">☀️ +0.5</button>
+        <button class="tool-btn" id="btn-reset" title="Reset Zoom & Exposure (0)">↺ Reset</button>
+        <button class="tool-btn" id="btn-fullscreen" title="Toggle Fullscreen (F)">⛶ Fullscreen</button>
+      </div>
+
+      <!-- Tri-Tier Metadata Card -->
+      <div class="glass-card hud-bottom-card" id="card-bottom">
+        <!-- Tier 1: Date & Dimensions -->
+        <div class="meta-row meta-date-row">
+          <span id="lbl-date" class="lbl-meta">📅 --</span>
+        </div>
+        <!-- Tier 2: Camera & Exposure -->
+        <div class="meta-row meta-exif-row" id="row-exif">
+          <span id="lbl-exif" class="lbl-meta">📷 --</span>
+        </div>
+        <!-- Tier 3: High Dynamic Range Specification Pipeline -->
+        <div class="meta-row meta-hdr-row" id="row-hdr-spec">
+          <span id="lbl-hdr-spec" class="lbl-hdr-spec">🎨 Color: sRGB  •  ⚡ Transfer: sRGB  •  Depth: 8-bit</span>
+        </div>
+      </div>
+
+      <!-- Bottom Progress Bar -->
+      <div class="progress-bar-container" id="progress-container">
+        <div class="progress-bar-fill" id="progress-fill"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Grid / Thumbnail Browser Modal -->
+  <div id="grid-modal" class="grid-modal" style="display: none;">
+    <div class="grid-header glass-card">
+      <div class="grid-title">📸 Photo Library (<span id="grid-count">0</span> items)</div>
+      <div class="grid-actions">
+        <button class="tool-btn active" id="btn-filter-all">All</button>
+        <button class="tool-btn" id="btn-filter-hdr">✨ HDR Only</button>
+        <button class="tool-btn" id="btn-close-grid">✕ Close (Esc)</button>
+      </div>
+    </div>
+    <div id="grid-container" class="grid-container"></div>
+  </div>
+
+  <!-- Scripts -->
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>
